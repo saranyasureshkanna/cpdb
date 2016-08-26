@@ -1,6 +1,7 @@
 package com.kohler.persistence.domain;
 
 import java.util.Date;
+import java.util.List;
 
 public class ItemLinkTypes {
 
@@ -8,10 +9,22 @@ public class ItemLinkTypes {
 	private String itemLinkTypeUc;
 	private String itemLinkType;
 	private String itemLinkKind;
-	private Date createdDate;	
+	private Date createdDate;	 
 	private String updatedBy;
 	private Date updatedDate;
 	private String languageCode;
+
+	// PDS 14 - Add children under CS Type
+	public List<ItemInfo> itemInfoList;
+	
+	
+	public List<ItemInfo> getItemInfoList() {
+		return itemInfoList;
+	}
+	public void setItemInfoList(List<ItemInfo> itemInfoList) {
+		this.itemInfoList = itemInfoList;
+	}
+	
 	
 	public String getItemLinkTypeId() {
 		return itemLinkTypeId;

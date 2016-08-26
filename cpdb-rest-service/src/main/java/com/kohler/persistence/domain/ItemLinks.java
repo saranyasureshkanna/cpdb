@@ -1,6 +1,8 @@
 package com.kohler.persistence.domain;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 public class ItemLinks {
 	//Item_Id in Item_Link
@@ -10,7 +12,7 @@ public class ItemLinks {
 	private String itemLinkTypeId;
 	private String crSellItemId;
 	private String createdBy;
-	private String displayOrder;
+	private String displayOrder; 
 	private String itemLinkText;
 	private String itemStyleId;	
 	private Date createdDate;	
@@ -21,6 +23,16 @@ public class ItemLinks {
 	private String priority;
 	private String crSellingTxt;
 	
+
+	//ADDED FOR PDS14 - CS
+	
+	List<ItemLinkTypes> csTypesList = new ArrayList<ItemLinkTypes>();
+	public String parent; 
+	
+
+	private String crossSellType;
+
+
 	public String getPriority() {
 		return priority;
 	}
@@ -105,5 +117,13 @@ public class ItemLinks {
 	public void setCrSellItemId(String crSellItemId) {
 		this.crSellItemId = crSellItemId;
 	}
+	
+
+	public String getParent() {
+		return parent;
+	}
+	public void setParent(String parent) {
+		this.parent = parent;
+	}	
 
 }
