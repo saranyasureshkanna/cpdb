@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.kohler.puni.persistence.dao.ItemLinksPcenDao">
+
+	
+	<resultMap id="itemLinksMap" type="ItemLinks" >
+		<id column="ITEM_INFO_ID" property="parentId"/>
+		<result column="cs_item_info_id" property="itemId" />
+		<result column="cross_sell_Type_ID" property="crSellItemId" />
+		<result column="Created_By" property="createdBy" />
+		<result column="Created_Date" property="createdDate" />	     
+		<result column="Updated_By" property="updatedBy" />	   
+		<result column="TIMESTAMP" property="updatedDate" />    
+		<result column="priority" property="priority" />
+		<result column="cross_selling_text" property="crSellingTxt" />	
+		
+	</resultMap>
+	  
+	  <resultMap id="itemLinkTypesMap" type="ItemLinkTypes" >
+		<id column="Cross_Sell_Type_Id" property="itemLinkTypeId"  />
+		<result column="Cross_Sell_Type_Uc" property="itemLinkTypeUc" />
+		<result column="Cross_Selling_Type" property="itemLinkType" />
+		<result column="Cross_Selling_Kind" property="Item_Link_Kind" />
+		<result column="Created_By" property="createdBy" />
+		<result column="Created_Date" property="createdDate" />	     
+		<result column="Updated_By" property="updatedBy" />	   
+		<result column="TIMESTAMP" property="updatedDate" />    
+		<result column="Language_Code" property="languageCode" />	
+	</resultMap>   
+	
+	<select id="getItemLinkIdByLinkTypUc" resultMap="itemLinkTypesMap">
+		SELECT
+			Cross_Sell_Type_Id,
+			Cross_Sell_Type_Uc,
+			Cross_Selling_Type,
+			Cross_Selling_Kind,
+			CREATED_BY,
+			CREATED_DATE,
+			UPDATED_BY,
+			TIMESTAMP,
+			LANGUAGE_CODE	
+		FROM
+			CB02RESI.CROSS_SELLING_TYPES where Cross_Sell_Type_Uc = #{itemLinkTypeUc}
+	</select>
+	
+	<select id="getItemLinksByParentnChildId" resultMap="itemLinksMap">
+		SELECT
+			ITEM_INFO_ID,
+			cs_item_info_id,
+			cross_sell_Type_ID,
+			CREATED_BY,
+			CREATED_DATE,
+			UPDATED_BY,
+			TIMESTAMP,
+			Priority,
+			cross_selling_text	
+		FROM
+			CB02KPNA.cross_selling where ITEM_INFO_ID = #{parentId} AND  cs_item_info_id = #{itemId}
+	</select>
+		
+	<select id="getItemLinksByCSellRelation" resultMap="itemLinksMap">
+		SELECT
+			ITEM_INFO_ID,
+			cs_item_info_id,
+			cross_sell_Type_ID,
+			CREATED_BY,
+			CREATED_DATE,
+			UPDATED_BY,
+			TIMESTAMP,
+			Priority,
+			cross_selling_text	
+		FROM
+			CB02KPNA.cross_selling where ITEM_INFO_ID = #{parentId} AND  cs_item_info_id = #{itemId} AND cross_sell_Type_ID = #{itemLinkTypeId} 
+	</select>
+	
+
+</mapper>

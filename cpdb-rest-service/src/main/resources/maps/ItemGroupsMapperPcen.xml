@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.kohler.puni.persistence.dao.ItemGroupsPcenDao">
+
+	<resultMap id="itemGroupsMap" type="ItemGroups" >
+		<id column="ITEM_INFO_ID" property="itemId"  />
+		<result column="ITEM_GROUP_ID" property="parentId" />
+		<result column="Created_By" property="createdBy" />
+		<result column="Created_Date" property="createdDate" />	     
+		<result column="Updated_By" property="updatedBy" />	   
+		<result column="TIMESTAMP" property="updatedDate" />	   
+	</resultMap>   
+	
+	<resultMap id="itemInfoMap" type="ItemInfo" >
+		<id column="ITEM_INFO_ID" property="itemId" />
+		<result column="ITEM_NO" property="itemName"  jdbcType="VARCHAR" javaType="java.lang.String"/>
+		<result column="ITEM_TYPE" property="itemKind" />
+		<result column="Status_ID" property="statusId" />
+		<result column="Keep_With" property="keepWith" />		
+		<result column="Priority" property="priority" />	
+		<result column="Sync_Group_ID" property="syncGroupId" />    	
+	    <result column="Created_By" property="createdBy" />
+		<result column="Created_Date" property="createdDate" />	     
+		<result column="Updated_By" property="updatedBy" />	   
+		<result column="TIMESTAMP" property="updatedDate" />	
+	</resultMap>
+	
+	
+	<select id="getItemGroups" resultMap="itemGroupsMap">
+		SELECT
+			ITEM_GROUP_ID,
+			ITEM_INFO_ID,
+			CREATED_BY,
+			CREATED_DATE,
+			UPDATED_BY,
+			TIMESTAMP
+		FROM
+			CB02KPNA.Item_Groups
+	</select>
+	
+<!-- 	<select id="getItemChildInfo" resultMap="itemInfoMap">
+		SELECT		
+			p.ITEM_GROUP_ID,
+			p.ITEM_INFO_ID,
+			p.CREATED_BY,
+			p.CREATED_DATE,
+			p.UPDATED_BY,
+			p.TIMESTAMP,
+			item.ITEM_NO,
+			item.ITEM_TYPE,
+			item.Status_ID,
+			item.Keep_With,
+			item.Priority,
+			item.Sync_Group_ID			
+		FROM
+			Item_Groups p LEFT OUTER JOIN Item_Info item on p.ITEM_INFO_ID = item.ITEM_NO
+	</select> -->
+	
+	<select id="getItemInfoByName" resultMap="itemInfoMap">
+		SELECT	
+			ITEM_INFO_ID, 
+			ITEM_NO,
+			ITEM_TYPE,
+			Status_ID,
+			Keep_With,
+			Priority,
+			Sync_Group_ID		
+		FROM
+		    CB02KPNA.ITEM_INFO  where ITEM_NO =#{itemName}
+	</select>
+	
+	<select id="getItemGroupByParentId" resultMap="itemGroupsMap">
+		SELECT
+			ITEM_GROUP_ID,
+			ITEM_INFO_ID,
+			CREATED_BY,
+			CREATED_DATE,
+			UPDATED_BY,
+			TIMESTAMP
+		FROM
+			CB02KPNA.ITEM_GROUPS where ITEM_GROUP_ID = #{parentId}  AND  ITEM_INFO_ID = #{itemId}
+	</select>
+	
+	
+</mapper>

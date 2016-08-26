@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.kohler.puni.persistence.dao.ItemLinksPuniDao">
+
+	
+	<resultMap id="itemLinksMap" type="ItemLinks" >
+		<id column="Item_Id" property="parentId"  />
+		<result column="Linked_Item_Id" property="itemId" />
+		<result column="Item_Link_Type_ID" property="itemLinkTypeId" />
+		<result column="Created_By" property="createdBy" />
+		<result column="Created_Date" property="createdDate" />	     
+		<result column="Updated_By" property="updatedBy" />	   
+		<result column="TIMESTAMP" property="updatedDate" />    
+		<result column="Language_Code" property="languageCode" />	
+	</resultMap>   
+	  
+	  <resultMap id="itemLinkTypesMap" type="ItemLinkTypes" >
+		<id column="Item_Link_Type_Id" property="itemLinkTypeId"  />
+		<result column="Item_Link_Type_Uc" property="itemLinkTypeUc" />
+		<result column="Item_Link_Type" property="itemLinkType" />
+		<result column="Item_Link_Kind" property="Item_Link_Kind" />
+		<result column="Created_By" property="createdBy" />
+		<result column="Created_Date" property="createdDate" />	     
+		<result column="Updated_By" property="updatedBy" />	   
+		<result column="TIMESTAMP" property="updatedDate" />    
+		<result column="Language_Code" property="languageCode" />	
+	</resultMap>   
+	
+	<select id="getItemLinkIdByLinkTypUc" resultMap="itemLinkTypesMap">
+		SELECT
+			Item_Link_Type_Id,
+			Item_Link_Type_Uc,
+			Item_Link_Type,
+			Item_Lik_Kind,
+			CREATED_BY,
+			CREATED_DATE,
+			UPDATED_BY,
+			TIMESTAMP,
+			LANGUAGE_CODE	
+		FROM
+			CB02RESI.ITEM_LINK_TYPES where Item_Link_Type_Uc = #{itemLinkTypeUc}
+	</select>
+	
+	<select id="getItemLinksByParentnChildId" resultMap="itemLinksMap">
+		SELECT
+			Item_Id,
+			Linked_Item_Id,
+			Item_Link_Type_ID,
+			CREATED_BY,
+			CREATED_DATE,
+			UPDATED_BY,
+			TIMESTAMP,
+			LANGUAGE_CODE	
+		FROM
+			CB02RESI.ITEM_LINKS where Item_Id = #{parentId} AND  Linked_Item_Id = #{itemId}
+	</select>
+	
+	<select id="getItemLinksByCSellRelation" resultMap="itemLinksMap">
+		SELECT
+			Item_Id,
+			Linked_Item_Id,
+			Item_Link_Type_ID,
+			CREATED_BY,
+			CREATED_DATE,
+			UPDATED_BY,
+			TIMESTAMP,
+			LANGUAGE_CODE	
+		FROM
+			CB02RESI.ITEM_LINKS where Item_Id = #{parentId} AND  Linked_Item_Id = #{itemId} AND Item_Link_Type_ID = #{itemLinkTypeId}
+	</select>
+
+</mapper>
