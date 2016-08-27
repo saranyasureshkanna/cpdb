@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 
 import com.kohler.persistence.Util.PimStatusManager;
 import com.kohler.persistence.Util.PimUtil;
+import com.kohler.puni.persistence.service.impl.PimServiceCrSellingImpl;
 import com.kohler.puni.persistence.service.impl.PimServiceImpl;
 
 @Component
@@ -27,6 +28,10 @@ public class PimServiceController {
 
 	@Autowired
 	private PimServiceImpl pimService;
+
+	@Autowired
+	private PimServiceCrSellingImpl pimCSService;
+	
 	@Autowired
 	private PimStatusManager pimStatusManager;
 
@@ -105,5 +110,40 @@ public class PimServiceController {
 		}
 
 	}
+	
+	@POST
+	@Path("/postCSItems/{schema}")
+	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response postCSItems(String json, @PathParam("schema") String schema, @PathParam("clientId")String clientId) {
+		log.debug("postCSItems request" + schema);
+		JSONObject jsonObj = new JSONObject(json.trim());
+		String responseJSON = null;
+		
+		JSONObject requestJsonObj = jsonObj.getJSONObject("request");
+		
+		schemaObj = (schema.equals(PimUtil.Attributes.pcenSchema))
+				? PimUtil.Attributes.pcenSchema : PimUtil.Attributes.puniSchema;
+		if(pimStatusManager.getStatusTable().get(schemaObj) == PimStatusManager.statusStopped) {
+			// Show schema import is in progress
+			System.out.println(schemaObj+"schema will start importing");
+			pimStatusManager.put(schemaObj, PimStatusManager.statusInProgress);
+		}else {
+			log.error(new JSONObject().put("error", PimUtil.Messages.SCHEMAIMPORTINPROGRESS.getMessage()).toString());
+			return Response.status(500).entity(new JSONObject().put("error", PimUtil.Messages.SCHEMAIMPORTINPROGRESS.getMessage()).toString()).build();
+		}
+		responseJSON = pimCSService.processCSItemsJSON(requestJsonObj, schema);
+		if (responseJSON != null && responseJSON.length() > 0){
+			System.out.println ("setting status to 1 postitems");
+			pimStatusManager.put(schemaObj, PimStatusManager.statusStopped);
+			return Response.status(200).entity(responseJSON).build();
+			
+		} else {
+			return Response.status(500).entity(new JSONObject().put("error", PimUtil.Messages.REQUESTFAILED.getMessage()).toString()).build();
+		}
+
+	}
+
+
 
 }
