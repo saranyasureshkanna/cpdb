@@ -1,6 +1,9 @@
 package com.kohler.persistence.domain;
 
 import java.util.Date;
+import java.util.List;
+
+import com.kohler.persistence.domain.json.StatusDetails;
 
 public class ItemInfo {
 
@@ -26,6 +29,7 @@ public class ItemInfo {
 	private Date updatedDate = new Date();
 	private String languageCode ="EN";
 	//private ItemGroups itemGroupsMap;
+	private List<StatusDetails> statDtlsList;
 	
 	
 	public Long getItemId() {
@@ -141,6 +145,12 @@ public class ItemInfo {
 	}
 	public void setItemName(String itemName) {
 		this.itemName = itemName;
+	}
+	public List<StatusDetails> getStatDtlsList() {
+		return statDtlsList;
+	}
+	public void setStatDetails(List<StatusDetails> statDtlsList) {
+		this.statDtlsList = statDtlsList;
 	}
 	
 }

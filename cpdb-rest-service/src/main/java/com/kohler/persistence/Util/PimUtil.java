@@ -2,12 +2,13 @@ package com.kohler.persistence.Util;
 
 public class PimUtil {
 	
-	public static enum Messages {
-		SCHEMAIMPORTINPROGRESS("There is a schema import in progress"),
+	public static enum Messages {SCHEMAIMPORTINPROGRESS("There is a schema import in progress"),
 		REQUESTSUCCESS("Request Success"),
 		REQUESTFAILED("PIM Service Request Failed"),
 		SUCCESSMESSAGE("Successful insert/update"),
+		SUCCESSDELETEMESSAGE("Successful delete"),
 		ERROR("Exception while insert/update"),
+		ERRORINDELETE("Exception while delete"),
 		VALIDATIONFAILED("Validation Failed "),
 		ITEMNOTFOUND("Item Not found"),
 		WARNING("No Existing Relationship Between Items");

@@ -1,5 +1,6 @@
 package com.kohler.puni.persistence.service.impl;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
@@ -8,12 +9,16 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.kohler.persistence.Util.PimUtil;
 import com.kohler.persistence.Util.PimUtil.Attributes;
 import com.kohler.persistence.domain.ItemInfo;
+import com.kohler.persistence.domain.ItemInfoParent;
 import com.kohler.persistence.domain.ItemLinkTypes;
 import com.kohler.persistence.domain.ItemLinks;
 import com.kohler.persistence.domain.json.Action;
@@ -22,17 +27,19 @@ import com.kohler.persistence.domain.json.CrossSell;
 import com.kohler.persistence.domain.json.Item;
 import com.kohler.persistence.domain.json.Product;
 import com.kohler.persistence.domain.json.Schema;
+import com.kohler.persistence.domain.json.StatusDetails;
 import com.kohler.persistence.provider.PimDaoMapper;
 import com.kohler.persistence.provider.PimDaoProvider;
 
-public class PimServiceCrSellingImpl {
+public class PimServiceCrSellingImpl{
+	
 	private static final Logger log = Logger
 			.getLogger(PimServiceCrSellingImpl.class);
 
 	@Autowired
 	private PimDaoProvider pimDaoProvider;
 
-	private Schema getSchema(JSONObject jo) {
+	private Schema getSchema(JSONObject jo,String SchemaName) {
 
 		List<Action> actions = new ArrayList<Action>();
 
@@ -56,14 +63,13 @@ public class PimServiceCrSellingImpl {
 
 		Item itemMod1 = new Item("", "1252K");
 		Item itemMod2 = new Item("", "1251K");
-		
+
 		CrossSell csMod = new CrossSell("", "AvailableFinish");
 		Product productMod = new Product("", "6959C");
 
 		List<Item> itemsMod = new ArrayList<Item>();
 		itemsMod.add(itemMod1);
 		itemsMod.add(itemMod2);
-		
 
 		List<CrossSell> cssMod = new ArrayList<CrossSell>();
 		csMod.setItems(itemsMod);
@@ -79,7 +85,7 @@ public class PimServiceCrSellingImpl {
 		actions.add(actionAdd);
 		actions.add(actionMod);
 
-		Schema schema = new Schema();
+		Schema schema = new Schema(SchemaName);
 		schema.setActions(actions);
 
 		return schema;
@@ -87,230 +93,245 @@ public class PimServiceCrSellingImpl {
 
 	// TO DO: Testing inprogress for pds14
 	public String processCSItemsJSON(JSONObject requestJSON, String schemaName) {
-		JSONObject outputJSON = new JSONObject();
-		JSONObject actionOutputJSON = null;
-		JSONObject ancestorOutputJSON = null, parentOutputJson = null, childOutputJSON = null, crossSellTypeJSON = null, crossSellOutputJSON = null;
-		log.info("Request json when processing itemInfo" + requestJSON);
-		LinkedHashMap<String, Object> parentsMap = new LinkedHashMap<>();
-		LinkedHashMap<String, Object> actionMap = new LinkedHashMap<>();
-		Iterator<Entry<String, Object>> itEntry;
-		List<String> csMap = new ArrayList<>();
-		// PimDaoMapper pimDaoMapper = pimDaoProvider.get(schemaName);
-		String statusMessage = null, statusLevel = null;
+		
+		
+		PimDaoProvider pimDaoProvider = new PimDaoProvider();
+		List<Action> actionList = new ArrayList<Action>();
+		List<Product> itemParentList = new ArrayList<Product>();
+		List<CrossSell> itemLnkList = new ArrayList<CrossSell>();
+		List<Item> itemLnkTypeList = new ArrayList<Item>();
+		List<ItemInfo> itemInfoList = new ArrayList<ItemInfo>();
+		List<StatusDetails> statDtlsList = new ArrayList<StatusDetails>();
+		
+		Schema outputSchema = new Schema();
+		Action action = new Action();
+		ItemInfoParent itemInfoParent = new ItemInfoParent();
+		ItemLinks itemLinks = new ItemLinks();
+		ItemLinkTypes itemlnkTyp = new ItemLinkTypes();
+		ItemInfo itemInfo = new ItemInfo();
+		ItemInfo parent = new ItemInfo();
+		StatusDetails statDtls = new StatusDetails();
+		
+		List<Action> OutputActionList = new ArrayList<Action>();
+		List<ItemInfoParent> OutputItemParentList = new ArrayList<ItemInfoParent>();
+		List<ItemLinks> OutputItemLnkList = new ArrayList<ItemLinks>();
+		List<ItemLinkTypes> OutputItemLnkTypeList = new ArrayList<ItemLinkTypes>();
+		List<ItemInfo> OutputItemInfoList = new ArrayList<ItemInfo>();
 
-		ItemInfo itemInfoParent = null;
-		ItemLinkTypes itemLinkTypes = null;
-		ItemInfo itemInfoChild = null;
-		ItemLinks itemLinks = null;
-
+		PimDaoMapper pimDaoMapper = pimDaoProvider.get(schemaName);
+		
 		boolean parentExist = true;
 		boolean childExist = true;
 		boolean csTypeExist = true;
-
+		
 		try {
-
+			
+			Schema schema = getSchema(requestJSON, schemaName);
+			
 			System.out.println("inside try");
-
-			Schema schema = getSchema(new JSONObject());
-
-			for (Action action : schema.getActions()) {
-
-				List<Product> products = new ArrayList<Product>();
-
-				for (Product pro : products) {
-					itemInfoParent = new ItemInfo();
-					itemInfoParent.setItemName(pro.getName());
-					// itemInfoParent =
-					// pimDaoMapper.getItemInfoByName(itemInfoParent);
-					if (itemInfoParent == null) {
+			actionList = schema.getActions();
+			for(Action eachAaction : actionList){
+				System.out.println(eachAaction.getAction()+":");
+				itemParentList = eachAaction.getProducts();
+				action.setAction(eachAaction.getAction());
+				for(Product eachParent : itemParentList){
+					System.out.println(eachParent.getName()+":");
+					itemLnkList = eachParent.getList();
+					itemInfoParent.setParentName(eachParent.getName());
+					parent.setItemName(eachParent.getName());
+					System.out.println(eachParent.getName());
+					parent = pimDaoMapper.getItemInfoByName(parent);
+					System.out.println(parent+":");
+					if (parent == null) {
 						parentExist = false;
-						// throw new Exception(parentName + " " +
-						// Messages.ITEMNOTFOUND.getMessage());
+					//	throw new Exception(eachParent.getName() + " " + PimUtil.Messages.ITEMNOTFOUND.getMessage());
 					}
-
-					for (CrossSell csObj : pro.getList()) {
-
-						itemLinkTypes = new ItemLinkTypes();
-						itemLinkTypes.setItemLinkTypeUc(csObj.getName());
-						// itemLinkTypes =
-						// pimDaoMapper.getItemLinkIdByLinkTypUc(itemLinkTypes);
-						if (itemLinkTypes == null) {
-							// csTypeExist = false;
-							// throw new Exception(csTypeDesc + " " +
-							// Messages.RELATIONDOEANOTEXIST.getMessage());
-						}
-
-						List<Item> childList = csObj.getItems();
-
-						for (Item i : childList) {
-
-							String itemName = i.getName();
-							itemInfoChild = new ItemInfo();
-							itemInfoChild.setItemName(itemName);
-							// itemInfoChild =
-							// pimDaoMapper.getItemInfoByName(itemInfoChild);
-							if (itemInfoChild == null) {
-								childExist = false;
-								// throw new Exception(itemName + " " +
-								// Messages.ITEMNOTFOUND.getMessage());
-							}
-							try {
-
-								itemLinks = new ItemLinks();
-								List<ItemLinks> itemLinkList = new ArrayList<>();
-								itemLinks.setItemId(itemInfoChild.getItemId());
-								itemLinks.setParentId(itemInfoParent
-										.getItemId());
-								itemLinks.setItemLinkTypeId(itemLinkTypes
-										.getItemLinkTypeId());
-
-								itemLinks
-										.setLanguageCode(Attributes.languageCodeEN);
-								itemLinks.setCreatedDate(new Date());
-								itemLinks.setUpdatedDate(new Date());
-								itemLinks.setPriority(Attributes.priority);
-
-								if (action.getAction() == ActionType.DELETE) {
-									itemLinks = deleteCrossSellRelation(itemLinks);
-									if (parentExist && childExist
-											&& csTypeExist) {
-										// itemLinkList =
-										// pimDaoMapper.getItemLinksByCSellRelation(itemLinks);
-										if (itemLinkList.isEmpty()) {
-											statusMessage = PimUtil.Messages.WARNING
-													.getMessage()
-													+ itemInfoParent
-															.getItemName()
-													+ ":"
-													+ itemInfoChild
-															.getItemName();
-											statusLevel = Attributes.statusWarning;
-										} else {
-											// pimDaoMapper.deleteHierarchyLink(itemLinks);
-											statusMessage = PimUtil.Messages.SUCCESSMESSAGE
-													.getMessage()
-													+ itemInfoParent
-															.getItemName()
-													+ ":"
-													+ itemInfoChild
-															.getItemName();
-											statusLevel = Attributes.statusSuccess;
-										}
-
-									} else {
-										statusMessage = PimUtil.Messages.VALIDATIONFAILED
-												.getMessage()
-												+ itemInfoParent.getItemName()
-												+ ":"
-												+ itemInfoChild.getItemName();
-										statusLevel = Attributes.statusError;
-									}
-
-								} else if (action.getAction() == ActionType.ADD) {
-									if (parentExist && childExist
-											&& csTypeExist) {
-										// itemLinkList =
-										// pimDaoMapper.getItemLinksByCSellRelation(itemLinks);
-
-										if (!itemLinkList.isEmpty()) {
-											// pimDaoMapper.deleteHierarchyLink(itemLinks);
-										}
-
-										log.info("insertOrUpdateItemObjects item links started:"
-												+ itemLinks.getItemLinkTypeId()
-												+ ":" + itemLinks.getItemId());
-										// pimDaoMapper.insertOrUpdateItemObjects(itemLinks);
-										statusMessage = PimUtil.Messages.SUCCESSMESSAGE
-												.getMessage()
-												+ itemInfoParent.getItemName()
-												+ ":"
-												+ itemInfoChild.getItemName();
-										statusLevel = Attributes.statusSuccess;
-									} else {
-										statusMessage = PimUtil.Messages.VALIDATIONFAILED
-												.getMessage()
-												+ itemInfoParent.getItemName()
-												+ ":"
-												+ itemInfoChild.getItemName();
-										statusLevel = Attributes.statusError;
-									}
-
-								} else if (action.getAction() == ActionType.ADD) {
-									if (parentExist && childExist
-											&& csTypeExist) {
-										// itemLinkList =
-										// pimDaoMapper.getItemLinkListByParentId(itemLinks);
-										if (!itemLinkList.isEmpty()) {
-
-											// pimDaoMapper.deleteItemLinksByParent(itemLinks);
-
-										}
-
-										log.info("insertOrUpdateItemObjects item links started:"
-												+ itemLinks.getItemLinkTypeId()
-												+ ":" + itemLinks.getItemId());
-										// pimDaoMapper.insertOrUpdateItemObjects(itemLinks);
-
-										statusMessage = PimUtil.Messages.SUCCESSMESSAGE
-												.getMessage()
-												+ itemInfoParent.getItemName()
-												+ ":"
-												+ itemInfoChild.getItemName();
-										statusLevel = Attributes.statusSuccess;
-									} else {
-										statusMessage = PimUtil.Messages.VALIDATIONFAILED
-												.getMessage()
-												+ itemInfoParent.getItemName()
-												+ ":"
-												+ itemInfoChild.getItemName();
-										statusLevel = Attributes.statusError;
-									}
-
-								}
-
-							} catch (Exception insException) {
-								log.error("Exception while insert/update item groups"
-										+ insException
-										+ itemInfoChild.getItemName());
-								statusMessage = PimUtil.Messages.ERROR
-										.getMessage()
-										+ insException.getMessage()
-										+ itemInfoChild.getItemName();
-								statusLevel = Attributes.statusError;
+					for(CrossSell eachItemLink : itemLnkList){
+						System.out.println(eachItemLink.getName()+":");
+						  //  itemLinks.setItemLinkText(eachItemLink.getName());
+						    itemlnkTyp.setItemLinkTypeUc(eachItemLink.getName());
+						    itemLnkTypeList = eachItemLink.getItems();
+						    itemlnkTyp = pimDaoMapper.getItemLinkIdByLinkTypUc(itemlnkTyp);
+						    
+							if (itemlnkTyp == null) {
+								csTypeExist = false;
+						//		throw new Exception(eachItemLink.getName() + " " + PimUtil.Messages.RELATIONDOEANOTEXIST.getMessage());
 							}
 
-						}
-					}
+						    
+						for(Item eachLinkType : itemLnkTypeList){
+							itemInfo = new ItemInfo();
+							
+							itemInfo.setItemName(eachLinkType.getName());
+									itemInfo = pimDaoMapper.getItemInfoByName(itemInfo);
+									if (itemInfo == null) {
+										childExist = false;
+							//			throw new Exception(itemName + " " + Messages.ITEMNOTFOUND.getMessage());
+									}
+									
+									if(parentExist && csTypeExist && childExist){										
 
+										itemLinks.setItemId(itemInfo.getItemId());
+										itemLinks.setParentId(parent.getItemId());
+										itemLinks.setItemLinkTypeId(itemlnkTyp.getItemLinkTypeId());
+										itemLinks.setLanguageCode(Attributes.languageCodeEN);
+										itemLinks.setCreatedDate(new Date());
+										itemLinks.setUpdatedDate(new Date());
+										itemLinks.setPriority(Attributes.priority);
+										
+										System.out.println(itemLinks.toString());
+
+											if(eachAaction.getAction().equals("D")){			
+												
+												itemInfo = deleteCrossSellRelation(itemLinks,pimDaoMapper);
+												statDtls.setStatusMessage(PimUtil.Messages.SUCCESSDELETEMESSAGE.getMessage() + itemInfo.getItemName());
+												
+											}else if(eachAaction.getAction().equals("A")){
+												itemInfo = addCrossSellRelation(itemLinks,pimDaoMapper);
+												statDtls.setStatusMessage(PimUtil.Messages.SUCCESSMESSAGE.getMessage() + itemInfo.getItemName());
+											}else if(eachAaction.getAction().equals("M")){
+												itemInfo = modifyCrossSellRelation(itemLinks,pimDaoMapper);
+												statDtls.setStatusMessage(PimUtil.Messages.SUCCESSMESSAGE.getMessage() + itemInfo.getItemName());
+											}
+											
+									}else{
+										statDtls.setStatusLevel(Attributes.statusError);
+										statDtls.setStatusMessage(PimUtil.Messages.VALIDATIONFAILED.getMessage() + itemInfo.getItemName());
+										statDtlsList.add(statDtls);
+										itemInfo.setStatDetails(statDtlsList);
+									}
+									
+									statDtls.setStatusLevel(Attributes.statusSuccess);										
+									statDtlsList.add(statDtls);
+									itemInfo.setStatDetails(statDtlsList);
+									OutputItemInfoList.add(itemInfo);
+									
+					}
+								itemlnkTyp.setItemInfoList(OutputItemInfoList);
+								OutputItemLnkTypeList.add(itemlnkTyp);
 				}
+						//itemLinks.setCsTypesList(OutputItemLnkTypeList);
+						OutputItemLnkList.add(itemLinks);
+			}
+					itemInfoParent.setItemLinks(OutputItemLnkList);
+					OutputItemParentList.add(itemInfoParent);
+		}
+				//action.setItemInfoParent(OutputItemParentList);
+				OutputActionList.add(action);
+			}
+			
+			//outputSchema.setActionList(OutputActionList);
+		
+		
+			catch(Exception insException){
+				log.error("Exception while creating cross sell relation" + insException
+						+ parent.getItemName());
+				}
+					
+													
+		return outputSchema.toString();
+	}
+
+
+	public ItemInfo deleteCrossSellRelation(ItemLinks itemLinks, PimDaoMapper pimDaoMapper) {
+		ItemInfo itemInfo = new ItemInfo();
+		StatusDetails statDtls = new StatusDetails();
+		List<ItemLinks> itemLinkList = new ArrayList<ItemLinks>();
+		List<StatusDetails> statDtlsList = new ArrayList<StatusDetails>();
+		try{
+			itemLinkList = pimDaoMapper.getItemLinksByCSellRelation(itemLinks);
+			if (itemLinkList.isEmpty()) {
+				statDtls.setStatusMessage(PimUtil.Messages.WARNING.getMessage());
+				statDtls.setStatusLevel(Attributes.statusWarning);
+				
+			} else {
+				pimDaoMapper.deleteHierarchyLink(itemLinks);
+				statDtls.setStatusMessage(PimUtil.Messages.SUCCESSMESSAGE.getMessage());
+				statDtls.setStatusLevel(Attributes.statusSuccess);
+			}
+			
+		}catch(Exception ex){
+			log.error("Exception while deleteCrossSellRelation" + ex);
+			statDtls.setStatusMessage(PimUtil.Messages.ERRORINDELETE.getMessage());
+			statDtls.setStatusLevel(Attributes.statusError);
+
+		}
+		
+		statDtlsList.add(statDtls);
+		itemInfo.setStatDetails(statDtlsList);
+		
+		return itemInfo;
+
+	}
+
+	public ItemInfo addCrossSellRelation(ItemLinks itemLinks,PimDaoMapper pimDaoMapper) {
+
+		ItemInfo itemInfo = new ItemInfo();
+		StatusDetails statDtls = new StatusDetails();
+		List<ItemLinks> itemLinkList = new ArrayList<ItemLinks>();
+		List<StatusDetails> statDtlsList = new ArrayList<StatusDetails>();
+		try{
+			
+			itemLinkList = pimDaoMapper.getItemLinksByCSellRelation(itemLinks);											
+			
+			if (!itemLinkList.isEmpty()) {														
+				pimDaoMapper.deleteHierarchyLink(itemLinks);														
+			}
+					
+			log.info("insertOrUpdateItemObjects item links started:"+itemLinks.getItemLinkTypeId()+":"+itemLinks.getItemId());								
+			pimDaoMapper.insertOrUpdateItemObjects(itemLinks);		
+			statDtls.setStatusMessage(PimUtil.Messages.SUCCESSMESSAGE.getMessage());
+			statDtls.setStatusLevel(Attributes.statusSuccess);			
+			
+		}catch(Exception ex){
+			log.error("Exception while deleteCrossSellRelation" + ex);
+			statDtls.setStatusMessage(PimUtil.Messages.ERRORINDELETE.getMessage());
+			statDtls.setStatusLevel(Attributes.statusError);
+
+		}
+		
+		statDtlsList.add(statDtls);
+		itemInfo.setStatDetails(statDtlsList);
+		
+		return itemInfo;
+
+	}
+
+	public ItemInfo modifyCrossSellRelation(ItemLinks itemLinks,PimDaoMapper pimDaoMapper) {
+
+		ItemInfo itemInfo = new ItemInfo();
+		StatusDetails statDtls = new StatusDetails();
+		List<ItemLinks> itemLinkList = new ArrayList<ItemLinks>();
+		List<StatusDetails> statDtlsList = new ArrayList<StatusDetails>();
+		try{
+				
+			itemLinkList = pimDaoMapper.getItemLinkListByParentId(itemLinks);
+			if (!itemLinkList.isEmpty()) {
+
+				pimDaoMapper.deleteItemLinksByParent(itemLinks);
+
 			}
 
-		} catch (Exception insException) {
-			log.error("Exception while insert/update item groups"
-					+ insException + itemInfoParent.getItemName());
-			statusMessage = PimUtil.Messages.ERROR.getMessage()
-					+ insException.getMessage() + itemInfoParent.getItemName();
-			statusLevel = Attributes.statusError;
+			log.info("insertOrUpdateItemObjects item links started:" + itemLinks.getItemLinkTypeId()
+					+ ":" + itemLinks.getItemId());
+			pimDaoMapper.insertOrUpdateItemObjects(itemLinks);
+			statDtls.setStatusMessage(PimUtil.Messages.SUCCESSMESSAGE.getMessage());
+			statDtls.setStatusLevel(Attributes.statusSuccess);
+			
+		}catch(Exception ex){
+			log.error("Exception while deleteCrossSellRelation" + ex);
+			statDtls.setStatusMessage(PimUtil.Messages.ERROR.getMessage());
+			statDtls.setStatusLevel(Attributes.statusError);
+
 		}
-		return outputJSON.toString();
-	}
+		
+		statDtlsList.add(statDtls);
+		itemInfo.setStatDetails(statDtlsList);
+		
+		return itemInfo;
+ 
+			
+	}	
 
-	public ItemLinks deleteCrossSellRelation(ItemLinks itemLinks) {
-
-		return itemLinks;
-
-	}
-
-	public ItemLinks addCrossSellRelation(ItemLinks itemLinks) {
-
-		return itemLinks;
-
-	}
-
-	public ItemLinks modifyCrossSellRelation(ItemLinks itemLinks) {
-
-		return itemLinks;
-
-	}
 
 }
