@@ -9,10 +9,8 @@
       http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.1.xsd
       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd">
 <mvc:annotation-driven />
-<context:component-scan base-package="com.kohler.puni.persistence" />
-
 <!-- Please note the properties file location should be supplied as a jvm argument when packaging the war -->
- <context:property-placeholder location="file:../conf/database-cpdb.properties" />
+ <context:property-placeholder location="file:/C:/Users/Nisha/git/cpdb/cpdb-rest-service/src/main/resources/database-cpdb.properties" />
 
 
 <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
@@ -24,6 +22,10 @@
 </bean>
 
 <bean id="pimService" class="com.kohler.puni.persistence.service.impl.PimServiceImpl">
+</bean>
+
+
+<bean id="pimCSService" class="com.kohler.puni.persistence.service.impl.PimServiceCrSellingImpl">
 </bean>
 
 <bean id="pimDaoProvider" class="com.kohler.persistence.provider.PimDaoProvider">

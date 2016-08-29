@@ -44,6 +44,8 @@ public class PimServiceController {
 		return Response.status(200).entity(result).build();
 
 	}
+	
+	
 
 	@POST
 	@Path("/postItemGroups/{schema}")
@@ -65,6 +67,8 @@ public class PimServiceController {
 		}
 		JSONObject requestJsonObj = jsonObj.getJSONObject("request");
 		log.info("Request Json" + JSONObject.quote(json));
+		
+		
 		responseJSON = pimService.processItemHierarchiesJSON(requestJsonObj,
 				schema);
 		if (responseJSON != null && responseJSON.length() > 0){
@@ -122,7 +126,7 @@ public class PimServiceController {
 		
 		
 		String responseJSON = null;
-		
+		  
 		JSONObject requestJsonObj = jsonObj.getJSONObject("request");
 		
 		schemaObj = (schema.equals(PimUtil.Attributes.pcenSchema))
@@ -135,7 +139,7 @@ public class PimServiceController {
 			log.error(new JSONObject().put("error", PimUtil.Messages.SCHEMAIMPORTINPROGRESS.getMessage()).toString());
 			return Response.status(500).entity(new JSONObject().put("error", PimUtil.Messages.SCHEMAIMPORTINPROGRESS.getMessage()).toString()).build();
 		}
-		//responseJSON = pimCSService.processCSItemsJSON(requestJsonObj, schema);
+		responseJSON = pimCSService.processCSItemsJSON(requestJsonObj, schema);
 		if (responseJSON != null && responseJSON.length() > 0){
 			System.out.println ("setting status to 1 postitems");
 			pimStatusManager.put(schemaObj, PimStatusManager.statusStopped);
